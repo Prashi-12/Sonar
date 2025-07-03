@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/Prashi-12/hello-sonar.git'
+                git url: 'https://github.com/Prashi-12/hello-sonar.git', branch: 'main'
             }
         }
 
