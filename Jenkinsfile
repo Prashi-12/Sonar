@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Git branch to build')
+    }
+
     tools {
         maven 'Maven 3'
         jdk 'JDK-17'
@@ -9,7 +13,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/Prashi-12/hello-sonar.git', branch: 'main'
+                git url: 'https://github.com/Prashi-12/hello-sonar.git', branch: "${params.BRANCH_NAME}"
             }
         }
 
