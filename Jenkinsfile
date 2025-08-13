@@ -5,7 +5,7 @@ pipeline {
         jdk 'JDK-11'
     }
     environment {
-        SONARQUBE = 'sonarqube'
+        SONARQUBE = 'sonarqube' // Jenkins SonarQube server configuration name
     }
     stages {
         stage('Checkout') {
@@ -13,18 +13,22 @@ pipeline {
                 git branch: 'prashanth.developer', url: 'https://github.com/Prashi-12/Sonar.git'
             }
         }
+
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv(SONARQUBE) {
-                    sh '''
-                        mvn clean verify sonar:sonar \
-                        -Dsonar.projectKey=my-project \
-                        -Dsonar.host.url=http://<your-public-worker-ip>:30090 \
-                        -Dsonar.login=<your-sonarqube-token>
-                    '''
+                withSonarQubeEnv("${SONARQUBE}") {
+                    withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_TOKEN')]) {
+                        sh """
+                            mvn clean verify sonar:sonar \
+                              -Dsonar.projectKey=my-project \
+                              -Dsonar.host.url=$SONAR_HOST_URL \
+                              -Dsonar.login=$SONAR_TOKEN
+                        """
+                    }
                 }
             }
         }
+
         stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
@@ -32,6 +36,7 @@ pipeline {
                 }
             }
         }
+
         stage('Build & Deploy to Nexus') {
             steps {
                 sh 'mvn clean deploy'
