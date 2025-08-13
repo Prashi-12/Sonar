@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'prashanth.developer', url: 'https://github.com/Prashi-12/prashanth.developer.git'
+                git branch: 'prashanth.developer', url: 'https://github.com/Prashi-12/Sonar.git'
             }
         }
         stage('SonarQube Analysis') {
