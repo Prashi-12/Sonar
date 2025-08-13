@@ -37,9 +37,10 @@ pipeline {
             }
         }
 
-        stage('Build & Deploy to Nexus') {
+        stage('Build & Archive Artifacts') {
             steps {
-                sh 'mvn clean deploy'
+                sh 'mvn clean package'
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
     }
