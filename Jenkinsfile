@@ -1,35 +1,40 @@
 pipeline {
     agent any
-
-    parameters {
-        string(name: 'BRANCH_NAME', defaultValue: 'main', description: 'Git branch to build')
-    }
-
     tools {
-        maven 'Maven 3'
-        jdk 'JDK-17'
+        maven 'Maven-3.8.5'
+        jdk 'JDK-11'
     }
-
+    environment {
+        SONARQUBE = 'sonarqube'
+    }
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/Prashi-12/Sonar.git', branch: "${params.BRANCH_NAME}"
+                git branch: 'prashanth.developer', url: 'https://github.com/Prashi-12/prashanth.developer.git'
             }
         }
-
-        stage('Build and SonarQube Analysis') {
+        stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('MySonarQube') {
-                    sh 'mvn clean verify sonar:sonar'
+                withSonarQubeEnv(SONARQUBE) {
+                    sh '''
+                        mvn clean verify sonar:sonar \
+                        -Dsonar.projectKey=my-project \
+                        -Dsonar.host.url=http://<your-public-worker-ip>:30090 \
+                        -Dsonar.login=<your-sonarqube-token>
+                    '''
                 }
             }
         }
-
         stage('Quality Gate') {
             steps {
-                timeout(time: 2, unit: 'MINUTES') {
+                timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
+            }
+        }
+        stage('Build & Deploy to Nexus') {
+            steps {
+                sh 'mvn clean deploy'
             }
         }
     }
