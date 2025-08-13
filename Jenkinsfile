@@ -5,7 +5,7 @@ pipeline {
         jdk 'JDK-11'
     }
     environment {
-        SONARQUBE = 'sonarqube' // Jenkins SonarQube server configuration name
+        SONARQUBE = 'SonarQube' // Jenkins SonarQube server configuration name
     }
     stages {
         stage('Checkout') {
