@@ -37,11 +37,16 @@ pipeline {
             }
         }
 
-        stage('Build & Archive Artifacts') {
+        stage('Build & Deploy to Nexus') {
             steps {
-                sh 'mvn clean package'
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    sh """
+                        mvn -s /var/jenkins_home/.m2/settings.xml clean deploy \
+                          -Dnexus.username=$NEXUS_USERNAME \
+                          -Dnexus.password=$NEXUS_PASSWORD
+                    """
+                }
             }
         }
     }
-} 
+}
