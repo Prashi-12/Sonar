@@ -6,7 +6,7 @@ pipeline {
     }
     environment {
         SONARQUBE = 'SonarQube'
-        SONAR_HOST_URL = "http://<your-sonar-ip>:<port>/"
+        SONAR_HOST_URL = "http://51.21.218.247:30090/"
         NEXUS_MAVEN_URL = "http://13.60.191.181:30081/repository/maven-releases"
         NEXUS_DOCKER_REPO = "13.60.191.181:30500/hello-sonar"
     }
