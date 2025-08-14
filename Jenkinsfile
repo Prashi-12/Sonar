@@ -6,6 +6,7 @@ pipeline {
     }
     environment {
         SONARQUBE = 'SonarQube'
+        SONAR_HOST_URL = "http://<your-sonar-ip>:<port>/"
         NEXUS_MAVEN_URL = "http://13.60.191.181:30081/repository/maven-releases"
         NEXUS_DOCKER_REPO = "13.60.191.181:30500/hello-sonar"
     }
@@ -15,7 +16,6 @@ pipeline {
                 git branch: 'prashanth.developer', url: 'https://github.com/Prashi-12/Sonar.git'
             }
         }
-
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv("${SONARQUBE}") {
@@ -30,7 +30,6 @@ pipeline {
                 }
             }
         }
-
         stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
@@ -38,7 +37,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build & Deploy to Nexus') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
@@ -50,19 +48,18 @@ pipeline {
                 }
             }
         }
-
         stage('Download Artifact from Nexus') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
                     sh """
-                        curl -u $NEXUS_USERNAME:$NEXUS_PASSWORD \
-                          -o hello-sonar.jar \
-                          $NEXUS_MAVEN_URL/com/example/hello-sonar/1.0-SNAPSHOT/hello-sonar-1.0-SNAPSHOT.jar
+                        mvn dependency:get \
+                          -DrepoUrl=$NEXUS_MAVEN_URL \
+                          -Dartifact=com.example:hello-sonar:1.0-SNAPSHOT \
+                          -Ddest=hello-sonar.jar
                     """
                 }
             }
         }
-
         stage('Build & Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
