@@ -5,7 +5,9 @@ pipeline {
         jdk 'JDK-11'
     }
     environment {
-        SONARQUBE = 'SonarQube' // Jenkins SonarQube server configuration name
+        SONARQUBE = 'SonarQube'
+        NEXUS_MAVEN_URL = "http://13.60.191.181:30081/repository/maven-releases"
+        NEXUS_DOCKER_REPO = "13.60.191.181:30500/hello-sonar"
     }
     stages {
         stage('Checkout') {
@@ -44,6 +46,30 @@ pipeline {
                         mvn -s /var/jenkins_home/.m2/settings.xml clean deploy \
                           -Dnexus.username=$NEXUS_USERNAME \
                           -Dnexus.password=$NEXUS_PASSWORD
+                    """
+                }
+            }
+        }
+
+        stage('Download Artifact from Nexus') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    sh """
+                        curl -u $NEXUS_USERNAME:$NEXUS_PASSWORD \
+                          -o hello-sonar.jar \
+                          $NEXUS_MAVEN_URL/com/example/hello-sonar/1.0-SNAPSHOT/hello-sonar-1.0-SNAPSHOT.jar
+                    """
+                }
+            }
+        }
+
+        stage('Build & Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
+                    sh """
+                        docker build -t $NEXUS_DOCKER_REPO:latest .
+                        echo $NEXUS_PASSWORD | docker login 13.60.191.181:30500 -u $NEXUS_USERNAME --password-stdin
+                        docker push $NEXUS_DOCKER_REPO:latest
                     """
                 }
             }
