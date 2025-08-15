@@ -6,7 +6,7 @@ pipeline {
     }
     environment {
         SONARQUBE = 'SonarQube'
-        SONAR_HOST_URL = "http://16.171.23.207:30090/"
+        SONAR_HOST_URL = "http://16.171.23.207:30090"
         NEXUS_MAVEN_URL = "http://56.228.7.62:30081/repository/maven-releases"
         NEXUS_DOCKER_REPO = "13.60.191.181:30500/hello-sonar"
     }
@@ -42,23 +42,10 @@ pipeline {
 
         stage('Build & Deploy to Nexus') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'NEXUS_USERNAME', passwordVariable: 'NEXUS_PASSWORD')]) {
-                    sh '''
-                        mkdir -p /var/jenkins_home/.m2
-                        cat > /var/jenkins_home/.m2/settings.xml <<EOF
-<settings>
-  <servers>
-    <server>
-      <id>nexus</id>
-      <username>${NEXUS_USERNAME}</username>
-      <password>${NEXUS_PASSWORD}</password>
-    </server>
-  </servers>
-</settings>
-EOF
-                        mvn -s /var/jenkins_home/.m2/settings.xml clean deploy
-                    '''
-                }
+                // No need to create settings.xml, Maven will use the one in /var/lib/jenkins/.m2/
+                sh '''
+                    mvn clean deploy
+                '''
             }
         }
 
@@ -67,7 +54,7 @@ EOF
                 sh '''
                     mvn dependency:get \
                       -DrepoUrl=$NEXUS_MAVEN_URL \
-                      -Dartifact=com.example:hello-sonar:1.0-SNAPSHOT \
+                      -Dartifact=com.example:hello-sonar:2.0-SNAPSHOT \
                       -Ddest=hello-sonar.jar
                 '''
             }
